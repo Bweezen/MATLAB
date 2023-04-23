@@ -1,0 +1,316 @@
+%2-phase
+clc;
+clear all;
+c = [ 0 0 0 0 -1 -1 0]
+A = [ 1 3 -1 0 1 0; 1 1 0 -1 0 1]
+b = [ 3;2]
+A = [ A b]
+bv = [5 6]
+zjcj = c(bv)*A - c
+simplex_table = [A; zjcj]
+array2table(simplex_table , 'VariableNames', {'x1','x2','s1','s2','R1','R2','sol'})
+RUN = true
+while RUN
+    zc = zjcj(1:end-1);
+    if any(zc<0)
+        fprintf('sol is not optimal \n')
+        [enter_val pvt_col] = min(zc);
+        if all(A(:,pvt_col)<=0)
+            fprintf('lpp is unbounded \n')
+            RUN = false;
+        else
+            sol = A(:,end);
+            col = A(:,pvt_col);
+            for i = 1: size(A,1)
+                if col(i) >0
+                    ratio(i) = sol(i)/col(i);
+                else
+                    ratio(i) = inf;
+                end
+            end
+            [leaving_value  pvt_row] = min(ratio);
+         pvt_key = A( pvt_row, pvt_col);
+         bv(pvt_row) = pvt_col;
+         A(pvt_row, :)= A(pvt_row, :)/pvt_key;
+         % row operations
+         for i = 1:size(A,1)
+             if i ~= pvt_row
+                 A(i,:) = A(i,:)-A(i,pvt_col)*A(pvt_row,:);
+             end
+         end
+         zjcj = c(bv)*A - c;
+         new_table = [A; zjcj];
+         array2table(new_table, 'Variablenames', {'x1','x2','s1','s2','R1','R2','sol'})
+        end 
+    else
+        RUN = false;
+        fprintf('the optimal sol is %f \n',zjcj(end))
+    end
+end
+if A(end,5:6)>0 
+    fprintf('infeasible solution \n')
+    return;
+else
+c = [ 3 5 0 0 0 ]
+b = A(:,7)
+A = A(:,1:4)
+A = [ A b]
+bv = [3 4 ]
+zjcj = c(bv)*A - c
+simplex_table = [A; zjcj]
+array2table(simplex_table , 'VariableNames', {'x1','x2','s1','s2','sol'})
+RUN = true
+while RUN
+    zc = zjcj(1:end-1);
+    if any(zc<0)
+        fprintf('sol is not optimal \n')
+        [enter_val pvt_col] = min(zc);
+        if all(A(:,pvt_col)<=0)
+            RUN = false;
+            fprintf('lpp is unbounded \n')
+        else
+            sol = A(:,end);
+            col = A(:,pvt_col);
+            for i = 1: size(A,1)
+                if col(i) >0
+                    ratio(i) = sol(i)/col(i);
+                else
+                    ratio(i) = inf;
+                end
+            end
+            [leaving_value, pvt_row] = min(ratio);
+            pvt_key = A(pvt_row, pvt_col);
+         bv(pvt_row) = pvt_col;
+         A(pvt_row, :)= A(pvt_row, :)/pvt_key;
+         % row operations
+         for i = 1:size(A,1)
+             if i ~= pvt_row
+                 A(i,:) = A(i,:)-A(i,pvt_col)*A(pvt_row,:);
+             end
+         end
+         zjcj = c(bv)*A - c;
+         new_table = [A; zjcj];
+         array2table(new_table, 'Variablenames', {'x1','x2','s1','s2','sol'})
+        end
+         
+    else
+        RUN = false;
+        fprintf('the optimal sol is %f \n',zjcj(end))
+    end
+end
+end
+
+%big M question 1
+clc;
+clear all;
+M = 1000
+c = [ -3 -5 0 0 -M -M 0]
+A = [ 1 3 -1 0 1 0; 1 1 0 -1 0 1]
+b = [ 3;2]
+A = [ A b]
+bv = [5 6]
+zjcj = c(bv)*A - c
+simplex_table = [A; zjcj]
+array2table(simplex_table , 'VariableNames', {'x1','x2','s1','s2','R1','R2','sol'})
+RUN = true
+while RUN
+    zc = zjcj(1:end-1);
+    if any(zc<0)
+        fprintf('sol is not optimal \n')
+        [enter_val pvt_col] = min(zc);
+        if all(A(:,pvt_col)<=0)
+            fprintf(' lpp is unbounded \n')
+            RUN = false;
+        else
+            sol = A(:,end);
+            col = A(:,pvt_col);
+            for i = 1: size(A,1)
+                if col(i) >0
+                    ratio(i) = sol(i)/col(i);
+                else
+                    ratio(i) = inf;
+                end
+            end
+            [leaving_value  pvt_row] = min(ratio);
+         pvt_key = A( pvt_row, pvt_col);
+         bv(pvt_row) = pvt_col;
+         A(pvt_row, :)= A(pvt_row, :)/pvt_key;
+         % row operations
+         for i = 1:size(A,1)
+             if i ~= pvt_row
+                 A(i,:) = A(i,:)-A(i,pvt_col)*A(pvt_row,:);
+             end
+         end
+         zjcj = c(bv)*A - c;
+         new_table = [A; zjcj];
+         array2table(new_table, 'Variablenames', {'x1','x2','s1','s2','R1','R2','sol'})
+        end 
+    else
+        RUN = false;
+        fprintf('the optimal sol is %f \n',-zjcj(end))
+end
+end
+
+DUAL SIMPLEX METHOD 
+
+% Dual Simplex 
+% QUES: min z=3x1+5x2 / x1+3x2>=3 / x1+x2>=2 
+% if we have min problem then convert it into max in mind
+
+clc;
+clear all;
+c = [ -3 -5 0 0 0];
+a = [-1 -3 1 0 ; -1 -1 0 1 ];
+b = [ -3; -2];
+A = [ a b]
+bv = [ 3 4 ]
+zjcj = c(bv)*A - c
+simplex_table = [A; zjcj]
+array2table(simplex_table, 'VariableNames',{'x1','x2','s1','s2','sol'})
+RUN = true
+while RUN
+    sol = A(:,end);
+    if any(sol<0)
+        [leaving_var, pvt_row] = min(sol);
+        zrow = A(pvt_row, 1: end-1);
+        zc= zjcj(1:end-1);
+        for i = 1:size(A,2)-1
+            if(zrow(i)<0)
+                ratio(i) = abs(zc(i)/zrow(i));
+            else
+                ratio(i) = inf;
+            end
+        end
+        [enter_var, pvt_col] = min(ratio);
+    pvt_key = A(pvt_row, pvt_col);
+    bv(pvt_row)= pvt_col;
+    A(pvt_row,:)= A(pvt_row,:)/pvt_key;
+    for i = 1:size(A,1)
+        if i ~=pvt_row
+            A(i,:)= A(i,:)-A(i,pvt_col)*A(pvt_row,:);
+        end
+    end
+    zjcj= c(bv)*A - c;
+    new_table = [A; zjcj];
+    array2table(new_table, 'VariableNames',{'x1','x2','s1','s2','sol'})
+    else
+       RUN = false;
+       fprintf('the feasible solution is %f\n',-zjcj(end))
+    end
+end
+
+LEAST COUNT METHOD
+
+% QUESTION 1 (least cost method)
+
+a = [12 25 20];                       % supply
+b = [25 10 15 5];                     % demand
+c = [2 10 4 5; 6 12 8 11; 3 39 5 7];  %cost matrix
+m = size(c,1)
+n = size(c,2)
+
+if (sum(a) == sum(b))
+    fprintf('The problem is balanced')
+else
+    fprintf('The problem is unbalanced')
+    if (sum(a)<sum(b))
+        m=m+1;
+        c(end+1,:) = zeros(1,length(b))
+        a(end+1) = sum(b) - sum(a)
+    else sum(a) > sum(b)
+        n=n+1;
+        c(:,end+1) = zeros(length(a),1)
+        b(end+1) = sum(a)-sum(b)
+    end
+end
+X = zeros(m,n)
+InitialC = c
+for i=1:size(c,1)
+    for j=1:size(c,2)
+        cpq = min(c(:))
+        if cpq == inf
+            break
+        end
+        [p1,q1] = find(cpq==c)
+        a(p1); b(q1);
+        xpq = min(a(p1),b(q1));
+        X(p1,q1)
+        [X(p1,q1),ind] = max(xpq);
+        p = p1(ind)
+        q = q1(ind)
+        X(p,q) = min(a(p),b(q))
+        if X(p,q) == a(p)
+            b(q) = b(q)-a(p);
+            a(p) = a(p)-X(p,q);
+            c(p,:) = inf;
+        else
+            X(p,q) == b(q);
+            a(p)=a(p)-b(q);
+            b(q)=b(q)-X(p,q);
+            c(:,q) = inf;
+        end
+    end
+end
+z = 0;
+for i=1:size(c,1)
+    for j=1:size(c,2)
+        z=z+X(i,j)*InitialC(i,j)
+    end
+end
+fprintf('Answer of least cost matrix is %f\n',z)
+
+SIMPLEX METHOD 
+
+%Simplex method
+clc
+clear all
+cost=[2 1 0 0 0 0];
+a=[1 2 1 0 0;1 1 0 1 0;1 -1 0 0 1];
+b=[10;6;2];
+A=[a b];
+Var={'x1','x2','s1','s2','s3','sol'};
+bv=[3 4 5]; % position of s1, s2, s3
+zjcj=cost(bv)*A-cost;               
+
+% Display initial simplex table
+simplex_table=[A; zjcj];
+array2table(simplex_table,'VariableNames',Var)
+RUN=true;
+while RUN
+if any(zjcj(1:end-1)<0)  % check for negative valueoptamility condition
+ fprintf(' The current BFS is not optimal \n');
+ zc=zjcj(1:end-1);
+ [Enter_val, pvt_col]= min(zc) ; %array 
+ if all(A(:,pvt_col)<=0)
+  error('LPP is Unbounded');
+ else
+ sol=A(:,end);
+ column=A(:,pvt_col);
+  for i=1:size(A,1)
+ if column(i)>0   % pivot column value positive
+    ratio(i)= sol (i)./column(i);
+ else
+    ratio(i)=inf;
+ end
+  end 
+    [leaving_value,pvt_row]=min(ratio);
+ end
+ bv(pvt_row)=pvt_col;% replaced leaving variable with entering variable
+ pvt_key=A(pvt_row, pvt_col);
+ A(pvt_row,:)=A (pvt_row,:)./pvt_key;
+ % row operation 
+for i=1:size(A,1)
+ if i~=pvt_row
+ A(i,:)=A(i,:)-A (i, pvt_col).*A(pvt_row,:);
+ end
+end
+ zjcj=cost(bv)*A-cost;
+ next_table=[zjcj; A];
+array2table(next_table,'VariableNames',Var)
+
+else
+    RUN=false;
+    
+    fprintf('The final optimal value is % f \n',zjcj(end));
+end
+end
